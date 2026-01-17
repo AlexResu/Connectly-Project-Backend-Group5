@@ -19,6 +19,7 @@ def get_users(request):
 # Create a User (POST)
 @csrf_exempt
 def create_user(request):
+    # import pdb; pdb.set_trace()  # Add this breakpoint
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -41,6 +42,7 @@ def get_posts(request):
 # Create a Post (POST):
 @csrf_exempt
 def create_post(request):
+    # import pdb; pdb.set_trace()  # Add this breakpoint
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
