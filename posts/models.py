@@ -13,17 +13,30 @@ class User(models.Model):
         return self.username
 
 
-
-
+# Post model with different types and metadata
 class Post(models.Model):
-    content = models.TextField()  # The text content of the post
-    author = models.ForeignKey(UserModel, related_name='posts', on_delete=models.CASCADE) # The user who created the post
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when the post was created
+    POST_TYPES = [
+        ('text', 'Text'),
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ]
 
+    title = models.CharField(max_length=255)
+    content = models.TextField(blank=True)
+    post_type = models.CharField(max_length=10, choices=POST_TYPES)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    author = models.ForeignKey(
+        UserModel,
+        related_name='posts',
+        on_delete=models.CASCADE
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Post by {self.author.username} at {self.created_at}"
-    
+        return f"{self.title} by {self.author.username}"
+
 
 # Comment model
 class Comment(models.Model):

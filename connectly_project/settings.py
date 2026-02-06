@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',  # Add Django REST Framework
     'posts',
+    'singletons',
     'django_extensions',
     'rest_framework.authtoken',
 
