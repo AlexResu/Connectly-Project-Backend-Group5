@@ -7,7 +7,13 @@ from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsPostAuthor
 from rest_framework.authentication import TokenAuthentication
+from singletons.logger_singleton import LoggerSingleton
+from factories.post_factory import PostFactory
 
+
+
+logger = LoggerSingleton().get_logger()
+logger.info("API initialized successfully.")
 
 
 # Update Views with Validation and Relational Logic (DRF)
@@ -73,5 +79,23 @@ class ProtectedView(APIView):
     def get(self, request):
         return Response({"message": "Authenticated!"})
 
+
+class CreatePostView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        try:
+            post = PostFactory.create_post(
+                post_type=data['post_type'],
+                title=data['title'],
+                content=data.get('content', ''),
+                metadata=data.get('metadata', {}),
+                author=request.user # Assuming the user is authenticated and available in the request
+            )
+            return Response({'message': 'Post created successfully!', 'post_id': post.id}, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

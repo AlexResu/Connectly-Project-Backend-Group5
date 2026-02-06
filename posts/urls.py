@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PostDetailView, ProtectedView, UserListCreate, PostListCreate, CommentListCreate
+from .views import CreatePostView, PostDetailView, ProtectedView, UserListCreate, PostListCreate, CommentListCreate
 
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     path('comments/', CommentListCreate.as_view(), name='comment-list-create'), #comments API
     path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'), # post detail API
     path('protected/', ProtectedView.as_view(), name='protected'), # protected API
+    path('factory-test/', CreatePostView.as_view(), name='factory-test'), # factory test API
 
 ]
 
