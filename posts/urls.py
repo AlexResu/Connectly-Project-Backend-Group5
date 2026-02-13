@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CreatePostView, PostDetailView, ProtectedView, UserListCreate, PostListCreate, CommentListCreate
+from .views import CommentPostView, CreatePostView, LikePostView, PostDetailView, ProtectedView, UserListCreate, PostListCreate, CommentListCreate
 
 
 urlpatterns = [
@@ -13,7 +13,8 @@ urlpatterns = [
     path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'), # post detail API
     path('protected/', ProtectedView.as_view(), name='protected'), # protected API
     path('factory-test/', CreatePostView.as_view(), name='factory-test'), # factory test API
-
+    path('posts/<int:post_id>/like/', LikePostView.as_view(), name='like-post'), # like/unlike post API
+    path('posts/<int:post_id>/comments/', CommentPostView.as_view(), name='comment-post'), # comment post API
 ]
 
 

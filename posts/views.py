@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User, Post, Comment
+
+from posts.pagination import Pagination
+from .models import Like, Post, Comment
 from .serializers import UserSerializer, PostSerializer, CommentSerializer
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +23,7 @@ class UserListCreate(APIView):
     def get(self, request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        return Response(list(users))
 
 
     def post(self, request):
@@ -31,6 +33,8 @@ class UserListCreate(APIView):
 
 
 class PostListCreate(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         posts = Post.objects.all()
         serializer = PostSerializer(posts, many=True)
@@ -46,6 +50,8 @@ class PostListCreate(APIView):
 
 
 class CommentListCreate(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         comments = Comment.objects.all()
         serializer = CommentSerializer(comments, many=True)
@@ -62,6 +68,7 @@ class CommentListCreate(APIView):
 
 
 class PostDetailView(APIView):
+
     permission_classes = [IsAuthenticated, IsPostAuthor]
 
 
@@ -69,7 +76,6 @@ class PostDetailView(APIView):
         post = Post.objects.get(pk=pk)
         self.check_object_permissions(request, post)
         return Response({"content": post.content})
-    
 
 class ProtectedView(APIView):
     authentication_classes = [TokenAuthentication]
@@ -99,3 +105,46 @@ class CreatePostView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class LikePostView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    # Allow unlike if the user has already liked the post
+    def post(self, request, post_id):
+        try:
+            post = Post.objects.get(id=post_id)
+            like, created = Like.objects.get_or_create(author=request.user, post=post)
+            if created:
+                return Response({'message': 'Post liked successfully!'}, status=status.HTTP_201_CREATED)
+            else:
+                like.delete()  # Unlike the post if already liked
+                return Response({'message': 'Post unliked successfully!'}, status=status.HTTP_200_OK)
+        except Post.DoesNotExist:
+            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CommentPostView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, post_id):
+        try:
+            post = Post.objects.get(id=post_id)
+            comments = post.comments.all()
+            paginator = Pagination()
+            paginated_comments = paginator.paginate_queryset(comments, request)
+            serializer = CommentSerializer(paginated_comments, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Post.DoesNotExist:
+            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request, post_id):
+        try:
+            post = Post.objects.get(id=post_id)
+            serializer = CommentSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(author=request.user, post=post)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Post.DoesNotExist:
+            return Response({'error': 'Post not found.'}, status=status.HTTP_404_NOT_FOUND)
